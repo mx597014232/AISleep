@@ -728,7 +728,7 @@ def fig_1_b_c_plot_y_psd_sig():
     ax3.set_position([0.09, 0.15, 0.55, 0.35])
     ax4.set_position([0.71, 0.15, 0.25, 0.75])
 
-    plt.savefig(f'./paper_figure/label_sig_psd.png', dpi=800)
+    plt.savefig(f'./paper_figure/fig_1_b_c_plot_y_psd_sig.png', dpi=800)
     # 显示图形
     plt.show()
 
