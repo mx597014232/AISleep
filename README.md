@@ -27,7 +27,7 @@ The embeddings of the first subject (SC4001E0) are already available in ./data.
 
 All embeddings can download the preprocessed UMAP embeddings data from the following link:
 
-* data link
+* [data link](https://zenodo.org/records/10217280)
 
 
 ## UK-Sleep algorithm process visualization and analysis:
