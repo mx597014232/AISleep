@@ -1,6 +1,6 @@
-# UK-Sleep
+# AI-Sleep
 
-UK-Sleep: An fully unsupervised automatic sleep staging algorithm based on single-channel EEG recordings
+AISleep: Automated and interpretable sleep staging from single-channel EEG data
 
 Sleep EEG analysis
 
@@ -30,9 +30,9 @@ All embeddings can download the preprocessed UMAP embeddings data from the follo
 * [data link](https://zenodo.org/records/10217280)
 
 
-## UK-Sleep algorithm process visualization and analysis:
+## AISleep algorithm process visualization and analysis:
 
     ./plot_code/plot_fig.py
    
-   This code reproduces figures for Fig.1, Fig.2, Fig.3, Fig.4, Fig.5, Fig.6, Fig.7.
+   This code reproduces figures for UMAP embedding Figure.
 
