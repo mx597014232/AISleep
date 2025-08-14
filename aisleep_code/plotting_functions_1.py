@@ -731,3 +731,13 @@ def fig_5d_osc_boxplot(sub_data=None, ax=None):
     ax.set_ylabel('Std$_{\mathrm{osc}}$ (dB)')
     ax.set_ylim(-0.05, 0.7)
     ax.yaxis.set_label_coords(-0.18, 0.5)
+
+
+if __name__ == "__main__":
+    fig_2a_plot_gamma_hist()
+    fig_2_b_plot_wake()
+    fig_2_c_boxplot()
+    fig_3_plot_irasa_new()
+    fig_4_plot_n3()
+    fig_4_so_boxplot()
+    fig_5_plot_alpha()
