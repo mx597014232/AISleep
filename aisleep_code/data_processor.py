@@ -26,6 +26,7 @@ import sklearn
 from sklearn.metrics import classification_report
 import pandas as pd
 from collections import Counter
+from aisleep_code import root_path
 
 # 输出正确率
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
@@ -184,8 +185,8 @@ class DatasetCreate:
         self.wake_close = None
         self.gamma_z = None
 
-        if os.path.exists(f'./data/class_data_sub_{self.no}.pkl'):
-            f = open(f'./data/class_data_sub_{self.no}.pkl', 'rb')
+        if os.path.exists(f'{root_path}/data/class_data_sub_{self.no}.pkl'):
+            f = open(f'{root_path}/data/class_data_sub_{self.no}.pkl', 'rb')
             self.__dict__.update(pickle.load(f))
             print("Successfully read!")
         else:
@@ -265,7 +266,7 @@ class DatasetCreate:
         self.psd_umap = get_umap(psd)
 
     def save(self):
-        f = open(f'./data/class_data_sub_{self.no}.pkl', 'wb')
+        f = open(f'{root_path}/data/class_data_sub_{self.no}.pkl', 'wb')
         pickle.dump(self.__dict__, f)
         print('Successfully save!')
 
