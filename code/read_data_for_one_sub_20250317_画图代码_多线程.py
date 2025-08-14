@@ -2392,11 +2392,8 @@ if __name__ == "__main__":
     acc_20 = accuracy_score(y_p, y_t)
     k_20 = cohen_kappa_score(y_p, y_t)
     mf1_20 = f1_score(y_p, y_t, average='macro')
-    # plot_confusion_matrix(y_p, y_t, name='edf_20_uk_sleep', title=f'UK-Sleep\nSleepEDF-20')
-    for i in range(5):
-        precision = np.sum(np.logical_and(y_p == i, y_t == i)) / np.sum(y_t == i)
-        recall = np.sum(np.logical_and(y_p == i, y_t == i)) / np.sum(y_p == i)
-        print(i, precision, recall, 2*precision*recall/(precision+recall))
+    from sklearn.metrics import classification_report
+    print(classification_report(y_p, y_t))
 
     y_p, y_t = [], []
     for no, self in enumerate(sub_data):
@@ -2410,11 +2407,7 @@ if __name__ == "__main__":
     acc_78 = accuracy_score(y_p, y_t)
     k_78 = cohen_kappa_score(y_p, y_t)
     mf1_78 = f1_score(y_p, y_t, average='macro')
-    # plot_confusion_matrix(y_p, y_t, name='edf_78_uk_sleep', title=f'UK-Sleep\nSleepEDF-78')
-    for i in range(5):
-        precision = np.sum(np.logical_and(y_p == i, y_t == i)) / np.sum(y_t == i)
-        recall = np.sum(np.logical_and(y_p == i, y_t == i)) / np.sum(y_p == i)
-        print(i, precision, recall, 2*precision*recall/(precision+recall))
+    print(classification_report(y_p, y_t))
 
     """
     """
