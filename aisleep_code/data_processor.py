@@ -30,8 +30,8 @@ from aisleep_code import root_path
 # 输出正确率
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score
 
-# 第一步，先运行1_20提取原始信号.py 在目录下生成包含153次睡眠实验预处理后的信号的npz文件
-npz_root = 'D:\\code\\实验室代码\\data\\eeg_fpz_cz\\'
+# 信号的npz文件
+npz_root = f'{root_path}\\data\\eeg_fpz_cz\\'
 
 # 颜色定义
 stage = ['Wake', 'N1', 'N2', 'N3', 'REM']
@@ -273,11 +273,9 @@ class DatasetCreate:
     def find_wake(self):
         # gamma功率
         psd, y = np.log(self.psd), self.y
-        # scaler = StandardScaler()  # 标准化处理 （不需要标准化处理，z-score差别不大）
-        # psd = scaler.fit_transform(psd)
-        mean = psd[:, np.logical_and(25 < self.freqs, self.freqs < 50)].mean(axis=1)  # 16至50Hz的归一化均值， 25-50的脑电波更好
+        mean = psd[:, np.logical_and(25 < self.freqs, self.freqs < 50)].mean(axis=1)
 
-        self.gamma = mean  # mean对应gamma功率
+        self.gamma = mean
         # 阈值分割
         label, proba = ostu(mean)
 
@@ -309,7 +307,7 @@ class DatasetCreate:
         sp_mean_11_16 = np.mean(log_psd_osc_filter[:, sp_l_idx:sp_r_idx], axis=1)
         self.sp_11_16 = sp_mean_11_16
         if len(peak_idxs):
-            sp_idx = np.argmin(np.abs(freqs[peak_idxs] - 14))  # 快纺锤波12-16Hz，寻找与中心频率14Hz最接近的纺锤波段
+            sp_idx = np.argmin(np.abs(freqs[peak_idxs] - 14))
             sp_freq = freqs[peak_idxs[sp_idx]]
             if 11 <= sp_freq <= 16:
                 sp_l_idx, sp_r_idx = np.where(freqs >= sp_freq - 1)[0][0], np.where(freqs <= sp_freq + 1)[0][-1]
@@ -317,11 +315,6 @@ class DatasetCreate:
         sp_mean = np.mean(log_psd_osc_filter[:, sp_l_idx:sp_r_idx], axis=1)
         self.fast_sp = sp_mean  # 快纺锤波功率
 
-        # 下一步的思路：
-        # 理论上，0是区分NREM与REM的阈值
-        # 实际上，该阈值应该随着分布稍作调整
-        # 用高斯分布拟合 <0 和 >0 的两个分布
-        # 然后用这两个分布的累积概率密度分配权重，然后KDE
         th = 0
         mean_0, mean_1 = np.mean(sp_mean[sp_mean <= th]), np.mean(sp_mean[sp_mean >= th])
         std_0, std_1 = np.std(sp_mean[sp_mean <= th]), np.std(sp_mean[sp_mean >= th])
@@ -352,7 +345,7 @@ class DatasetCreate:
         sw_mask = sw.get_mask().reshape((-1, 3000))  # 慢波对应的区间,转换成睡眠帧相应的mask
         self.so = sw_mask.sum(axis=1) / 3000  # 慢波时间占比
 
-        self.so_percent = self.so - 0.10  # 减去0.1，对应的正确率是79.83%，不减去0.15，正确率是：76.81%；-0.10，对应79.87%
+        self.so_percent = self.so - 0.10
         self.so_percent[self.so_percent < 0] = 0
         self.so_percent[self.wake == 1] = 0  # W期对应的权重置零
 
@@ -361,33 +354,30 @@ class DatasetCreate:
         levels = np.linspace(psd_umap_p.min(), psd_umap_p.max(), 10)  # 概率密度10等分
         self.n3 = psd_umap_p > levels[1]
 
-        # self.n3修正，由于W期和rem期有眼动，带来类似于慢波的干扰。N3检测需要check
         conflict_mask = np.logical_and(self.wake == 1, self.n2n3 == 1)  # 既有高频活动，也有纺锤波段信号的区域
         wake_mask = np.logical_and(self.wake == 1, self.n2n3 == 0)  # 有高频活动，无纺锤波段信号（可能是Wake区）
         nrem_mask = np.logical_and(self.wake == 0, self.n2n3 == 1)  # 有纺锤波段信号，无高频活动（可能是NREM区）
         unknow_mask = np.logical_and(self.wake == 0, self.n2n3 == 0)  # 既没有高频活动，也没有纺锤波段信号（可能是REM区）
 
-        # 计算每个N3期的点到wake区，nrem区，unknow区的距离，conflict_mask 不考虑
 
         label = wake_mask * 0 + nrem_mask * 2 + unknow_mask * 4
         for i, label_i in enumerate(label):
-            # i表示要计算距离的点，xx_mask是一组点的坐标列表
             dis_w = np.mean(pairwise_distances(self.psd_umap[None, i, :],
                                                self.psd_umap[wake_mask], metric='euclidean'))
             dis_nrem = np.mean(pairwise_distances(self.psd_umap[None, i, :],
                                                   self.psd_umap[nrem_mask], metric='euclidean'))
             dis_rem = np.mean(pairwise_distances(self.psd_umap[None, i, :],
                                                  self.psd_umap[unknow_mask], metric='euclidean'))
-            if conflict_mask[i]:  # 该点存在W期与N2期冲突的猜测
+            if conflict_mask[i]:
                 label[i] = 0 if dis_w < dis_nrem else 2
-            elif self.n3[i]:  # 该点没有冲突情况，但有n3期的判定
-                min_dis = np.min([dis_w, dis_nrem, dis_rem])  # 最小平均距离
+            elif self.n3[i]:
+                min_dis = np.min([dis_w, dis_nrem, dis_rem])
                 if dis_w == min_dis:
-                    label[i] = 0  # 离W较近，判为W期
+                    label[i] = 0
                 elif dis_rem == min_dis:
-                    label[i] = 4  # 离rem期较近，判为rem期
+                    label[i] = 4
                 elif dis_nrem == min_dis:
-                    label[i] = 3  # 离nrem较近，判为n3期
+                    label[i] = 3
         self.label = label
 
 
@@ -403,11 +393,6 @@ class DatasetCreate:
         osc_std = np.std(log_psd_osc_filter, axis=1)
         self.posc_std = osc_std  # 睡眠帧的震荡信号的功率标准差
 
-        # 下一步的思路：
-        # 理论上，0是区分NREM与REM的阈值
-        # 实际上，该阈值应该随着分布稍作调整
-        # 用高斯分布拟合 <0 和 >0 的两个分布
-        # 然后用这两个分布的累积概率密度分配权重，然后KDE
         th = log_psd_osc_filter.std()
         mean_0, mean_1 = np.mean(osc_std[osc_std <= th]), np.mean(osc_std[osc_std >= th])
         std_0, std_1 = np.std(osc_std[osc_std <= th]), np.std(osc_std[osc_std >= th])
@@ -449,9 +434,6 @@ class DatasetCreate:
         image_mask[z > levels[1]] = 1
         labels = watershed(-z, markers)  # 分水岭分割算法
 
-
-
-        # ax[2].pcolormesh(x, y, mask_so)
         x, y = x_umap[:, 0], x_umap[:, 1]  # 按照位置映射关系给每个局部簇打上标签
         nx, ny, dx, dy = 100, 100, (x.max() - x.min()) / 98, (y.max() - y.min()) / 98  # 100*100像素
         x, y = np.linspace(x.min() - dx, x.max() + dx, nx), np.linspace(y.min() - dy, y.max() + dx, ny)
@@ -463,9 +445,7 @@ class DatasetCreate:
 
 def distinguish_n1_rem(self, win=20, return_curve=False):
     new_label = self.label.copy()
-    # 状态平滑过渡，由于把N1当做REM，N1处与平滑后的曲线差异较大。
     new_label_sg = np.convolve(self.label, np.ones(win) / win, mode='same')
-    # 对于每个REM期，如果与1更近，则为N1期，如果与4更近，则为REM
     for i, l in enumerate(self.label):
         if l == 4:
             if new_label_sg[i] < 2.5:
@@ -473,9 +453,6 @@ def distinguish_n1_rem(self, win=20, return_curve=False):
                 new_label_sg = np.convolve(new_label, np.ones(win) / win, mode='same')
             else:
                 new_label[i] = 4
-    # wake进入N2期时,一般不直接发生转换
-    # new_label[np.logical_and(new_label == 2, new_label_sg < 1.5)] = 1
-    # REM结束后一般是N1期
 
     if return_curve:
         return new_label, new_label_sg
