@@ -32,7 +32,8 @@ All embeddings can download the preprocessed UMAP embeddings data from the follo
 
 ## AISleep algorithm process visualization and analysis:
 
-    ./plot_code/plot_fig.py
+    ./aisleep_code/plotting_functions_1.py
+    ./aisleep_code/plotting_functions_2.py
    
    This code reproduces figures for UMAP embedding Figure.
 
